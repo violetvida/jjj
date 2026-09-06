@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>เรียงประโยคจีน 🐼</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&family=Noto+Sans+SC:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FFF7EC;
+    --panel:#FFFFFF;
+    --peach:#FFB08A;
+    --peach-deep:#F0895F;
+    --mint:#8FD8C6;
+    --mint-deep:#4FB89C;
+    --lav:#C9B6E4;
+    --ink:#4A3F45;
+    --ink-soft:#8A7E84;
+    --line:#F0E4D6;
+    --wrong:#F0895F;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--cream);
+    font-family:'Mali','Noto Sans SC',sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:28px 14px 60px;
+  }
+  .stage{ width:100%; max-width:640px; }
+
+  /* ---- top bar ---- */
+  .topbar{
+    display:flex; align-items:center; gap:14px;
+    margin-bottom:18px;
+  }
+  .mascot{
+    font-size:40px; line-height:1;
+    filter:drop-shadow(0 3px 0 rgba(0,0,0,.06));
+    transition:transform .25s ease;
+  }
+  .mascot.happy{ animation:bounce .5s ease; }
+  .mascot.oops{ animation:wobble .4s ease; }
+  @keyframes bounce{ 0%{transform:translateY(0)} 30%{transform:translateY(-14px) rotate(-6deg)} 60%{transform:translateY(0) rotate(4deg)} 100%{transform:translateY(0)} }
+  @keyframes wobble{ 0%,100%{transform:rotate(0)} 25%{transform:rotate(-8deg)} 75%{transform:rotate(8deg)} }
+
+  .progress-wrap{ flex:1; }
+  .progress-label{
+    font-size:13px; color:var(--ink-soft); margin-bottom:6px; font-weight:600;
+  }
+  .progress-track{
+    height:10px; border-radius:999px; background:var(--line); overflow:hidden;
+  }
+  .progress-fill{
+    height:100%; border-radius:999px;
+    background:linear-gradient(90deg,var(--mint-deep),var(--mint));
+    transition:width .4s ease;
+  }
+  .attempts-pill{
+    font-size:12px; color:var(--ink-soft); background:var(--panel);
+    border:1px solid var(--line); border-radius:999px; padding:5px 12px;
+    white-space:nowrap;
+  }
+
+  /* ---- card ---- */
+  .card{
+    background:var(--panel);
+    border-radius:26px;
+    padding:26px 22px 24px;
+    box-shadow:0 10px 0 var(--line), 0 14px 30px rgba(180,140,90,.12);
+    position:relative;
+    overflow:hidden;
+  }
+  .card::before{
+    content:"";
+    position:absolute; top:-40px; right:-40px;
+    width:120px; height:120px; border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, #FFE7D2, transparent 70%);
+  }
+
+  .thai-bubble{
+    background:#FFF1E2;
+    border-radius:18px 18px 18px 4px;
+    padding:16px 18px;
+    font-size:19px;
+    line-height:1.6;
+    color:#5A4A3D;
+    position:relative;
+    margin-bottom:22px;
+  }
+  .thai-bubble .tag{
+    display:inline-block;
+    font-size:12px;
+    font-weight:700;
+    color:var(--peach-deep);
+    background:#FFE2CF;
+    border-radius:999px;
+    padding:2px 10px;
+    margin-bottom:8px;
+  }
+
+  .slots{
+    display:flex; flex-wrap:wrap; gap:8px;
+    min-height:56px;
+    padding:12px;
+    border-radius:16px;
+    background:var(--cream);
+    border:2px dashed var(--line);
+    margin-bottom:20px;
+    transition:border-color .2s, background .2s;
+  }
+  .slots.shake{ animation:shakeX .45s ease; border-color:var(--wrong); background:#FFF0EB; }
+  @keyframes shakeX{
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-8px)}
+    40%{transform:translateX(7px)}
+    60%{transform:translateX(-5px)}
+    80%{transform:translateX(4px)}
+  }
+  .slots.success{ border-color:var(--mint-deep); border-style:solid; background:#EFFBF6; }
+
+  .slot-empty{
+    width:40px; height:40px;
+    border-radius:10px;
+    border:1.5px dashed #E3D3BE;
+  }
+
+  .tile{
+    font-family:'Noto Sans SC','Mali',sans-serif;
+    font-size:20px;
+    font-weight:500;
+    min-width:40px;
+    height:40px;
+    padding:0 8px;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+    user-select:none;
+    transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
+  }
+  .tile-placed{
+    background:var(--peach);
+    color:#fff;
+    box-shadow:0 3px 0 var(--peach-deep);
+  }
+  .tile-placed:hover{ transform:translateY(1px); box-shadow:0 2px 0 var(--peach-deep); }
+  .tile-placed:active{ transform:translateY(3px); box-shadow:none; }
+
+  .pool{
+    display:flex; flex-wrap:wrap; gap:9px;
+    padding-top:2px;
+  }
+  .tile-pool{
+    background:#F5EFE6;
+    color:var(--ink);
+    box-shadow:0 3px 0 #E3D7C6;
+  }
+  .tile-pool:hover{ background:#EFE6D8; transform:translateY(1px); box-shadow:0 2px 0 #E3D7C6; }
+  .tile-pool:active{ transform:translateY(3px); box-shadow:none; }
+
+  .hint-row{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:18px;
+  }
+  .ghost-btn{
+    border:none; background:none; color:var(--ink-soft);
+    font-family:inherit; font-size:14px; font-weight:600;
+    cursor:pointer; text-decoration:underline; text-underline-offset:3px;
+    padding:4px;
+  }
+  .ghost-btn:hover{ color:var(--peach-deep); }
+
+  .feedback{
+    min-height:26px;
+    font-size:15px; font-weight:700;
+    display:flex; align-items:center; gap:6px;
+  }
+  .feedback.correct{ color:var(--mint-deep); }
+  .feedback.wrong{ color:var(--wrong); }
+
+  .next-btn{
+    display:none;
+    margin-top:16px;
+    width:100%;
+    border:none; border-radius:16px;
+    background:linear-gradient(90deg,var(--mint-deep),var(--mint));
+    color:#fff; font-family:inherit; font-weight:700; font-size:17px;
+    padding:14px; cursor:pointer;
+    box-shadow:0 4px 0 #3A9782;
+    transition:transform .12s, box-shadow .12s;
+  }
+  .next-btn.show{ display:block; }
+  .next-btn:hover{ transform:translateY(1px); box-shadow:0 3px 0 #3A9782; }
+  .next-btn:active{ transform:translateY(4px); box-shadow:none; }
+
+  /* ---- finish screen ---- */
+  .finish{
+    text-align:center; padding:20px 6px;
+  }
+  .finish .big-emoji{ font-size:56px; margin-bottom:6px; }
+  .finish h2{ margin:0 0 8px; font-size:26px; color:var(--peach-deep); }
+  .finish p{ color:var(--ink-soft); font-size:16px; margin:4px 0 20px; }
+  .stat-row{ display:flex; gap:12px; justify-content:center; margin-bottom:22px; flex-wrap:wrap;}
+  .stat-box{
+    background:var(--cream); border-radius:14px; padding:12px 18px;
+    min-width:110px;
+  }
+  .stat-box .num{ font-size:24px; font-weight:700; color:var(--mint-deep); }
+  .stat-box .lab{ font-size:12px; color:var(--ink-soft); }
+  .restart-btn{
+    border:none; border-radius:16px;
+    background:linear-gradient(90deg,var(--peach-deep),var(--peach));
+    color:#fff; font-family:inherit; font-weight:700; font-size:16px;
+    padding:13px 26px; cursor:pointer;
+    box-shadow:0 4px 0 #C96B45;
+  }
+  .restart-btn:active{ transform:translateY(3px); box-shadow:none; }
+
+  @media (prefers-reduced-motion: reduce){
+    .mascot.happy, .mascot.oops, .slots.shake{ animation:none; }
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="topbar">
+    <div class="mascot" id="mascot">🐼</div>
+    <div class="progress-wrap">
+      <div class="progress-label" id="progressLabel">ข้อที่ 1 จาก 22</div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+    <div class="attempts-pill" id="attemptsPill">ลองครั้งที่ 1</div>
+  </div>
+
+  <div class="card" id="quizCard">
+    <div class="thai-bubble">
+      <span class="tag">แปลเป็นจีน</span><br>
+      <span id="thaiText"></span>
+    </div>
+
+    <div class="slots" id="slots"></div>
+
+    <div class="pool" id="pool"></div>
+
+    <div class="hint-row">
+      <div class="feedback" id="feedback"></div>
+      <button class="ghost-btn" id="resetBtn">🔄 เริ่มข้อนี้ใหม่</button>
+    </div>
+
+    <button class="next-btn" id="nextBtn">ข้อถัดไป →</button>
+  </div>
+
+  <div class="card finish" id="finishCard" style="display:none;">
+    <div class="big-emoji">🎉🐼🎊</div>
+    <h2>เก่งมากค่ะ! เรียงครบทุกข้อแล้ว</h2>
+    <p>ฝึกเรียงประโยคภาษาจีนครบทั้ง 22 ข้อเรียบร้อย</p>
+    <div class="stat-row">
+      <div class="stat-box"><div class="num" id="statQuestions">22</div><div class="lab">ประโยคทั้งหมด</div></div>
+      <div class="stat-box"><div class="num" id="statPerfect">0</div><div class="lab">ถูกในครั้งแรก</div></div>
+      <div class="stat-box"><div class="num" id="statAttempts">0</div><div class="lab">จำนวนครั้งที่ลองรวม</div></div>
+    </div>
+    <button class="restart-btn" id="restartBtn">เริ่มทำใหม่ตั้งแต่ต้น 🔁</button>
+  </div>
+
+</div>
+
+<script>
+const DATA = [
+["สัญญาฉบับนี้เป็นสัญญาจ้างแรงงานแบบมีกำหนดระยะเวลา","本合同为固定期限劳动合同。"],
+["ลูกจ้าง (ฝ่าย ข) มีสิทธิตามกฎหมายในการได้รับวันหยุดตามกฎหมายของประเทศจีน วันหยุดพักผ่อนประจำปีแบบได้รับค่าจ้าง วันลาแต่งงาน วันลาคลอด วันลาเพื่อจัดการงานศพ และสิทธิการลาอื่น ๆ","乙方依法享有中国法定节假日、带薪年休假、婚假、产假、丧假等休假权利。"],
+["สัญญามีระยะเวลา 3 ปี เริ่มตั้งแต่วันที่ 1 กันยายน ค.ศ. 2026 ถึงวันที่ 31 สิงหาคม ค.ศ. 2029","合同期限为三年，自2026年9月1日起至2029年8月31日止。"],
+["ทั้งนี้ ระยะเวลาทดลองงานเริ่มตั้งแต่วันที่ 1 กันยายน ค.ศ. 2026 ถึงวันที่ 30 พฤศจิกายน ค.ศ. 2026","其中试用期自2026年9月1日起至2026年11月30日止。"],
+["ภายหลังจากปรึกษาหารือและได้ข้อยุติร่วมกันกับสหภาพแรงงานและลูกจ้าง (ฝ่าย ข) แล้ว ต้องจ่ายค่าล่วงเวลาให้แก่ลูกจ้าง (ฝ่าย ข) ตามกฎหมาย","经与工会和乙方协商一致，并依法向乙方支付加班费。"],
+["จำนวนวันหยุดพักผ่อนประจำปีของลูกจ้าง (ฝ่าย ข) ให้เป็นไปตาม “ระเบียบว่าด้วยวันหยุดพักผ่อนประจำปีแบบได้รับค่าจ้างของลูกจ้าง” ของประเทศจีน","乙方年休假天数根据中国《职工带薪年休假条例》执行。"],
+["หรือเมื่อทั้งสองฝ่ายให้ความยินยอมเป็นลายลักษณ์อักษร ลูกจ้าง (ฝ่าย ข) สามารถทำงานทางไกลจากที่พักในประเทศไทยได้","或经双方书面同意，乙方可在泰国进行远程居家办公。"],
+["ระยะเวลาทดลองงานมีกำหนด 3 เดือน","试用期为三个月。"],
+["เวลาทำงานในแต่ละวันไม่เกิน 8 ชั่วโมง และเวลาทำงานเฉลี่ยต่อสัปดาห์ไม่เกิน 40 ชั่วโมง","每日工作时间不超过8小时，平均每周工作时间不超过40小时。"],
+["หากนายจ้าง (ฝ่าย ก) มีความจำเป็นด้านการผลิตและการดำเนินธุรกิจที่จะจัดให้ลูกจ้าง (ฝ่าย ข) ทำงานล่วงเวลา ต้องปฏิบัติตามบทบัญญัติของกฎหมายแห่งรัฐ","甲方因生产经营需要安排乙方加班的，应当遵循国家法律规定。"],
+["ช่วยประสานงานด้านการดำเนินธุรกิจประจำวันและการสื่อสารทางวัฒนธรรมระหว่างผู้บริหารระดับสูงสัญชาติจีนที่ได้รับมอบหมายมาปฏิบัติงาน กับพนักงานไทยในท้องถิ่นและหน่วยงานภาครัฐที่มีหน้าที่กำกับดูแล","协助中国籍派遣高管与泰国本地员工及政府监管部门进行日常业务对接和文化沟通协调。"],
+["อายุงานสะสมครบ 20 ปี มีวันหยุดพักผ่อนประจำปี 15 วัน","累计工作满20年，年休假15天。"],
+["ลูกจ้าง (ฝ่าย ข) ตกลงปฏิบัติงานให้กับนายจ้าง (ฝ่าย ก) ในตำแหน่งนักแปลธุรกิจภาษาจีน–ไทยควบผู้ประสานงานอาวุโส","乙方同意在甲方担任中文商务翻译兼高级协调员岗位。"],
+["กรณีขยายเวลาทำงานในวันทำงานปกติ ให้จ่ายค่าล่วงเวลาไม่น้อยกว่า 150% ของค่าจ้างรายชั่วโมง","工作日延长工作时间：支付不低于小时工资的150%的加班工资。"],
+["รับผิดชอบการแปลเอกสารจีน–ไทยสองทิศทาง ได้แก่ สัญญาธุรกิจ เอกสารทางกฎหมาย กฎระเบียบภายใน และข้อมูลทางเทคนิคของนายจ้าง (ฝ่าย ก) เพื่อให้มั่นใจว่าข้อความแปลสอดคล้องกับบริบททางกฎหมายของประเทศจีนและประเทศไทย","负责甲方的商务合同、法律文件、内部规章及技术资料的中泰双向笔译，确保译文符合中国及泰国法律语境。"],
+["ทั้งสองฝ่ายตกลงให้ใช้ระบบเวลาทำงานมาตรฐาน","双方约定执行标准工时工作制。"],
+["อายุงานสะสมครบ 1 ปี แต่ไม่ถึง 10 ปี มีวันหยุดพักผ่อนประจำปี 5 วัน","累计工作满1年不满10年，年休假5天。"],
+["รับผิดชอบการล่ามสองทิศทางแบบล่ามพร้อม/ล่ามพูดตามในการประชุมระหว่างผู้บริหารระดับสูงของจีนและไทย เพื่อให้การสื่อสารมีประสิทธิภาพและราบรื่น","负责中泰两国高管会议的双向同声／交替传译，确保沟通高效顺畅。"],
+["สถานที่ปฏิบัติงานเฉพาะของลูกจ้าง (ฝ่าย ข) กำหนดไว้ ณ อุทยานเทคโนโลยีขั้นสูงจางเจียง เขตผู่ตงใหม่ นครเซี่ยงไฮ้ สาธารณรัฐประชาชนจีน","乙方的具体工作地点为中华人民共和国上海市浦东新区张江高科技园区。"],
+["กรณีจัดให้ทำงานในวันหยุดประจำสัปดาห์และไม่สามารถจัดวันหยุดชดเชยได้ ให้จ่ายค่าล่วงเวลาไม่น้อยกว่า 200% ของค่าจ้างรายวัน","休息日安排工作又不能安排补休的：支付不低于日工资的200%的加班工资。"],
+["กรณีจัดให้ทำงานในวันหยุดตามกฎหมาย ให้จ่ายค่าล่วงเวลาไม่น้อยกว่า 300% ของค่าจ้างรายวัน","法定节假日安排工作的：支付不低于日工资的300%的加班工资。"],
+["อายุงานสะสมครบ 10 ปี แต่ไม่ถึง 20 ปี มีวันหยุดพักผ่อนประจำปี 10 วัน","累计工作满10年不满20年，年休假10天。"]
+];
+
+function tokenize(s){
+  return s.match(/\d+%?|[^\d]/g) || [];
+}
+
+let qIndex = 0;
+let correctTokens = [];
+let poolIndices = [];   // indices into correctTokens, currently in pool (shuffled order)
+let placedIndices = []; // indices into correctTokens, in the order user placed them
+let attemptsThisQ = 1;
+let totalAttempts = 0;
+let perfectCount = 0;
+
+const thaiText = document.getElementById('thaiText');
+const slotsEl = document.getElementById('slots');
+const poolEl = document.getElementById('pool');
+const feedbackEl = document.getElementById('feedback');
+const nextBtn = document.getElementById('nextBtn');
+const resetBtn = document.getElementById('resetBtn');
+const progressLabel = document.getElementById('progressLabel');
+const progressFill = document.getElementById('progressFill');
+const attemptsPill = document.getElementById('attemptsPill');
+const mascot = document.getElementById('mascot');
+const quizCard = document.getElementById('quizCard');
+const finishCard = document.getElementById('finishCard');
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function loadQuestion(i){
+  qIndex = i;
+  attemptsThisQ = 1;
+  const [thai, zh] = DATA[i];
+  thaiText.textContent = thai;
+  correctTokens = tokenize(zh);
+  poolIndices = shuffle(correctTokens.map((_,idx)=>idx));
+  placedIndices = [];
+  feedbackEl.textContent = '';
+  feedbackEl.className = 'feedback';
+  nextBtn.classList.remove('show');
+  slotsEl.classList.remove('success','shake');
+  progressLabel.textContent = `ข้อที่ ${i+1} จาก ${DATA.length}`;
+  progressFill.style.width = `${(i/DATA.length)*100}%`;
+  attemptsPill.textContent = `ลองครั้งที่ ${attemptsThisQ}`;
+  render();
+}
+
+function render(){
+  // slots
+  slotsEl.innerHTML = '';
+  if(placedIndices.length === 0){
+    for(let k=0;k<correctTokens.length;k++){
+      const d = document.createElement('div');
+      d.className = 'slot-empty';
+      slotsEl.appendChild(d);
+    }
+  } else {
+    placedIndices.forEach((tokIdx, pos)=>{
+      const b = document.createElement('button');
+      b.className = 'tile tile-placed';
+      b.textContent = correctTokens[tokIdx];
+      b.onclick = ()=> removeFromSlot(pos);
+      slotsEl.appendChild(b);
+    });
+    for(let k=placedIndices.length;k<correctTokens.length;k++){
+      const d = document.createElement('div');
+      d.className = 'slot-empty';
+      slotsEl.appendChild(d);
+    }
+  }
+
+  // pool
+  poolEl.innerHTML = '';
+  poolIndices.forEach(tokIdx=>{
+    const b = document.createElement('button');
+    b.className = 'tile tile-pool';
+    b.textContent = correctTokens[tokIdx];
+    b.onclick = ()=> addFromPool(tokIdx);
+    poolEl.appendChild(b);
+  });
+}
+
+function addFromPool(tokIdx){
+  const i = poolIndices.indexOf(tokIdx);
+  if(i === -1) return;
+  poolIndices.splice(i,1);
+  placedIndices.push(tokIdx);
+  render();
+  if(placedIndices.length === correctTokens.length){
+    checkAnswer();
+  }
+}
+
+function removeFromSlot(pos){
+  const tokIdx = placedIndices[pos];
+  placedIndices.splice(pos,1);
+  poolIndices.push(tokIdx);
+  feedbackEl.textContent = '';
+  feedbackEl.className = 'feedback';
+  slotsEl.classList.remove('shake','success');
+  render();
+}
+
+function checkAnswer(){
+  const built = placedIndices.map(idx=>correctTokens[idx]).join('');
+  const target = correctTokens.join('');
+  totalAttempts++;
+  if(built === target){
+    if(attemptsThisQ === 1) perfectCount++;
+    slotsEl.classList.add('success');
+    feedbackEl.textContent = '✅ ถูกต้องค่ะ เก่งมาก!';
+    feedbackEl.className = 'feedback correct';
+    mascot.classList.remove('oops');
+    mascot.textContent = '🐼🎉';
+    mascot.classList.add('happy');
+    setTimeout(()=>{ mascot.classList.remove('happy'); mascot.textContent='🐼'; }, 600);
+    nextBtn.classList.add('show');
+  } else {
+    slotsEl.classList.add('shake');
+    feedbackEl.textContent = '❌ ยังไม่ถูกนะคะ ลองสลับตำแหน่งดูอีกครั้ง';
+    feedbackEl.className = 'feedback wrong';
+    mascot.classList.remove('happy');
+    mascot.textContent = '🐼💦';
+    mascot.classList.add('oops');
+    attemptsThisQ++;
+    attemptsPill.textContent = `ลองครั้งที่ ${attemptsThisQ}`;
+    setTimeout(()=>{
+      mascot.classList.remove('oops');
+      mascot.textContent = '🐼';
+      slotsEl.classList.remove('shake');
+      poolIndices = shuffle(placedIndices.concat(poolIndices));
+      placedIndices = [];
+      render();
+    }, 650);
+  }
+}
+
+resetBtn.onclick = ()=> loadQuestion(qIndex);
+
+nextBtn.onclick = ()=>{
+  if(qIndex + 1 < DATA.length){
+    loadQuestion(qIndex + 1);
+  } else {
+    progressFill.style.width = '100%';
+    quizCard.style.display = 'none';
+    finishCard.style.display = 'block';
+    document.getElementById('statQuestions').textContent = DATA.length;
+    document.getElementById('statPerfect').textContent = perfectCount;
+    document.getElementById('statAttempts').textContent = totalAttempts;
+  }
+};
+
+document.getElementById('restartBtn').onclick = ()=>{
+  totalAttempts = 0;
+  perfectCount = 0;
+  finishCard.style.display = 'none';
+  quizCard.style.display = 'block';
+  loadQuestion(0);
+};
+
+loadQuestion(0);
+</script>
+</body>
+</html>
